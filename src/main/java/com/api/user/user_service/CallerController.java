@@ -1,9 +1,11 @@
 package com.api.user.user_service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @RestController
 public class CallerController {
 
@@ -21,7 +23,9 @@ public class CallerController {
 
     @GetMapping("/api/call-order")
     public String callServiceB() {
-        String response = restTemplate.getForObject("http://localhost:8082/api/hello", String.class);
+
+        log.info("calling order service");
+        String response = restTemplate.getForObject("http://order-service:8082/api/hello", String.class);
         return "Response from B: " + response;
     }
 }
