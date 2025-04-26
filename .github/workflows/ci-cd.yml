@@ -4,12 +4,15 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout application code
         uses: actions/checkout@v3
 
       - name: Set up JDK 21
@@ -33,22 +36,30 @@ jobs:
           IMAGE_TAG=1.0.${{ github.run_number }}
           docker build -t $IMAGE_NAME:$IMAGE_TAG .
           docker push $IMAGE_NAME:$IMAGE_TAG
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
-      - name: Copy deployment template
-        run: |
-          cp k8s/deployment-template.yaml k8s/deployment.yaml
+      - name: Checkout infrastructure repository≠
+        uses: actions/checkout@v3
+        with:
+          repository: amitdusane/infra-repo
+          token: ${{ secrets.INFRA_REPO_PAT }}
+          path: infra-repo
 
-      - name: Replace image tag in deployment.yaml
+      - name: Update image tag in deployment.yaml
         run: |
           IMAGE_TAG=1.0.${{ github.run_number }}
-          sed -i "s|__IMAGE_TAG__|$IMAGE_TAG|g" k8s/deployment.yaml
+          sed -i "s|image: amitdusane/user-service:.*|image: amitdusane/user-service:$IMAGE_TAG|g" infra-repo/user-service/deployment.yaml
 
-      - name: Commit and push changes
+      - name: Configure Git for PAT
         run: |
+          cd infra-repo
+          git config --local --unset-all http.https://github.com/.extraheader
+          git remote set-url origin https://amitdusane:${{ secrets.INFRA_REPO_PAT }}@github.com/amitdusane/infra-repo.git
+
+      - name: Commit and push changes to infra-repo
+        run: |
+          cd infra-repo
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add k8s/deployment.yaml
-          git commit -m "Update image tag to $IMAGE_TAG"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+          git add user-service/deployment.yaml
+          git commit -m "Update user-service image tag to $IMAGE_TAG"
+          git push
