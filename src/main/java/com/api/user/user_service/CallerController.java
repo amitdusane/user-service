@@ -11,17 +11,17 @@ public class CallerController {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @GetMapping("/api/test-user")
+    @GetMapping("/user/api/test-user")
     public String testUser() {
         return "Response from user-service";
     }
 
-    @GetMapping("/api/test")
+    @GetMapping("/user/api/test")
     public String test() {
         return "Response from user-service new";
     }
 
-    @GetMapping("/api/call-order")
+    @GetMapping("/user/api/call-order")
     public String callServiceB() {
 
         log.info("calling order service from user service");
