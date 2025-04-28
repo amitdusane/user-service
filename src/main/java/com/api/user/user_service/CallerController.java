@@ -25,7 +25,7 @@ public class CallerController {
     public String callServiceB() {
 
         log.info("calling order service from user service");
-        String response = restTemplate.getForObject("http://order-service:8082/api/hello", String.class);
+        String response = restTemplate.getForObject("http://order-service:8082/order/api/hello", String.class);
         return "Response from B: " + response;
     }
 }
